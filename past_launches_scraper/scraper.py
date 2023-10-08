@@ -61,7 +61,7 @@ def scrape_past_launches_data():
     while True:
         sleep(TIME_SLEEP)
         if not stop_all:
-            logging.info(f'[+] Scrapping Page {i}..')
+            logging.info(f'{SCRIPT_NAME} - Scrapping Page {i}..')
             soup = make_soup(f'https://nextspaceflight.com/launches/past/?page={i}&search=')
             if soup:
                 all_cards = soup.find_all('div', class_='mdl-cell mdl-cell--6-col')
@@ -145,3 +145,5 @@ def scrape_past_launches_data():
 
             for row in tqdm(data, total=len(data), desc='[+] Exporting data to .csv'):
                 writer.writerow(row)
+
+    return logging.info(f'{SCRIPT_NAME} - {DATA_FILENAME} updated!')
