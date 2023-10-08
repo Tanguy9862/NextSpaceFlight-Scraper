@@ -11,7 +11,7 @@ import requests
 FORMATS = ["%a %b %d, %Y", "%a %b %d, %Y %H:%M UTC", "%Y-%m-%d", "%Y-%m-%d %H:%M:%S"]
 MAX_RETRIES = 5
 TIME_SLEEP = 2
-PATH_TO_EXPORT = '../data'
+PATH_TO_EXPORT = 'data'
 DATA_FILENAME = "past_launches_data.csv"
 SCRIPT_NAME = 'Past_Launches_Scraper'
 headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0"}
