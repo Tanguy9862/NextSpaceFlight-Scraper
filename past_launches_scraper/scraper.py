@@ -18,15 +18,16 @@ headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Geck
 logging.basicConfig(level=logging.INFO)
 
 
-def scrape_past_launches_data():
+def convert_to_date(date_str):
+    for date_format in FORMATS:
+        try:
+            return pd.to_datetime(date_str, format=date_format)
+        except ValueError:
+            pass
+    return None
 
-    def convert_to_date(date_str):
-        for date_format in FORMATS:
-            try:
-                return pd.to_datetime(date_str, format=date_format)
-            except ValueError:
-                pass
-        return None
+
+def scrape_past_launches_data():
 
     def make_soup(url):
         retry_count = 0
