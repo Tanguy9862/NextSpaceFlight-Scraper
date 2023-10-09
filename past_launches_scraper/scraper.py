@@ -36,7 +36,7 @@ def scrape_past_launches_data():
             try:
                 response = requests.get(url, headers=headers)
                 break
-            except ConnectionError as e:
+            except requests.ConnectionError as e:
                 retry_count += 1
                 logging.info(f'{e} on page {i}')
                 logging.info(f'Retrying.. (Attempt {retry_count})')
