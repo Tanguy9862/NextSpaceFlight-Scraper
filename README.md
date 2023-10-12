@@ -2,13 +2,15 @@
 
 ## Overview
 
-This Python package is designed to scrape historical space launch data. It complements the [Space-App](https://github.com/Tanguy9862/Space-App) project by providing the data backbone for various visualizations and analyses.
+This Python package is designed to scrape historical space launch data from NextSpaceFlight.com and store it in Google Cloud Storage. It complements the [Space-App](https://github.com/Tanguy9862/Space-App) project by providing the data backbone for various visualizations and analyses.
 
 ## Features
 
-- **Historical Data**: Scrapes comprehensive historical data on space launches, including the launch vehicle, launch site, mission objectives, outcomes, etc.
-- **Data Transformation**: Transforms the scraped data into a JSON format for easy consumption.
-- **Time-Series Analysis**: The data is structured to facilitate time-series analysis, allowing for trend identification and predictive modeling.
+- **Source**: Scrapes comprehensive historical data from NextSpaceFlight.com.
+- **Historical Data**: Gathers detailed information on past space launches.
+- **Data Transformation**: Transforms the scraped data into a CSV format for easy consumption.
+- **Google Cloud Storage**: Automatically uploads the scraped data to Google Cloud Storage.
+- **Data Update**: Checks for existing data in Google Cloud Storage and appends new data.
 - **Error Handling**: Robust error handling to ensure data integrity.
 - **Logging**: Detailed logging for debugging and monitoring.
 
@@ -22,12 +24,12 @@ pip install git+https://github.com/Tanguy9862/NextSpaceFlight-Scrapper.git
 
 ## Usage
 
-After installation, you can import the package and use the `scrape_past_launches_data()` function to scrape the data.
+After installation, you can import the package and use the `scrape_past_launches_data()` function to scrape and update the data.
 
 ```python
 from next_spaceflight_scrapper import scraper
 
-# Scrape historical launch data
+# Scrape and update historical launch data
 scraper.scrape_past_launches_data()
 ```
 
@@ -37,6 +39,11 @@ scraper.scrape_past_launches_data()
 - BeautifulSoup
 - Requests
 - Pandas
+- Google Cloud Storage
+
+## Authentication
+
+To access Google Cloud Storage, you'll need a JSON file containing your GCS authentication keys. Place this file in the `past_launches_scrapper` directory and name it `spacexploration-keys.json`.
 
 ## License
 
@@ -45,5 +52,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Related Projects
 
 - [Space-App](https://github.com/Tanguy9862/Space-App)
-- [Wikipedia_Space_Scraper](https://github.com/Tanguy9862/Wikipedia_Space_Scraper)
-- [Next-Launch-Scraper](https://github.com/Tanguy9862/Next-Launch-Scraper)
