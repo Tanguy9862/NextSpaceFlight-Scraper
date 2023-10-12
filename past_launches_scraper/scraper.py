@@ -3,7 +3,7 @@ from google.cloud import storage
 from io import BytesIO
 from time import sleep
 from tqdm import tqdm
-from utils import read_csv_from_gcs, exists_on_cloud
+from past_launches_scraper.utils import read_csv_from_gcs, exists_on_cloud
 import logging
 import os
 import pandas as pd
@@ -159,5 +159,3 @@ def scrape_past_launches_data():
         blob.upload_from_file(byte_stream, content_type='text/csv')
 
     return logging.info(f'{SCRIPT_NAME} - {BLOB_NAME} updated!')
-
-
