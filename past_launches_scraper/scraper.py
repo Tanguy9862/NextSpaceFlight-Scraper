@@ -54,7 +54,6 @@ def scrape_past_launches_data():
     if exists_on_cloud(BUCKET_NAME, BLOB_NAME):
         df = read_csv_from_gcs(BUCKET_NAME, BLOB_NAME).sort_values(by='Date')
         last_date = convert_to_date(df.iloc[-1]['Date'])
-        print(f'last date is: {last_date}')
     else:
         df = pd.DataFrame()
 
