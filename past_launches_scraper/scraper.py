@@ -1,7 +1,9 @@
 from bs4 import BeautifulSoup
+from google.cloud import storage
+from io import BytesIO
 from time import sleep
 from tqdm import tqdm
-import csv
+from utils import read_csv_from_gcs, exists_on_cloud
 import logging
 import os
 import pandas as pd
@@ -11,11 +13,14 @@ import requests
 FORMATS = ["%a %b %d, %Y", "%a %b %d, %Y %H:%M UTC", "%Y-%m-%d", "%Y-%m-%d %H:%M:%S"]
 MAX_RETRIES = 5
 TIME_SLEEP = 2
-PATH_TO_EXPORT = 'data'
-DATA_FILENAME = "past_launches_data.csv"
+BUCKET_NAME = 'spacexploration_data'
+BLOB_NAME = 'past_launches_data.csv'
 SCRIPT_NAME = 'Past_Launches_Scraper'
 headers = {"User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:108.0) Gecko/20100101 Firefox/108.0"}
 logging.basicConfig(level=logging.INFO)
+
+if os.path.exists('spacexploration-keys.json'):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'spacexploration-keys.json'
 
 
 def convert_to_date(date_str):
@@ -46,13 +51,12 @@ def scrape_past_launches_data():
             return None
         return BeautifulSoup(response.text, 'html.parser')
 
-    try:
-        df = pd.read_csv(f'{PATH_TO_EXPORT}/{DATA_FILENAME}')
-    except FileNotFoundError:
-        df = pd.DataFrame()
-    else:
-        df = df.sort_values(by='Date')
+    if exists_on_cloud(BUCKET_NAME, BLOB_NAME):
+        df = read_csv_from_gcs(BUCKET_NAME, BLOB_NAME).sort_values(by='Date')
         last_date = convert_to_date(df.iloc[-1]['Date'])
+        print(f'last date is: {last_date}')
+    else:
+        df = pd.DataFrame()
 
     data = []
     i = 1
@@ -136,15 +140,24 @@ def scrape_past_launches_data():
         else:
             break
 
-    # Export to .csv format:
+    # Export to .csv on GCS:
     if data:
-        has_previous_file = os.path.exists(f'{PATH_TO_EXPORT}/{DATA_FILENAME}')
-        with open(f'{PATH_TO_EXPORT}/{DATA_FILENAME}', mode='a', newline='', encoding='utf-8') as f:
-            writer = csv.DictWriter(f, fieldnames=data[0].keys())
-            if not has_previous_file:
-                writer.writeheader()
+        logging.info(f'{SCRIPT_NAME} - {BLOB_NAME} Adding new data..')
 
-            for row in tqdm(data, total=len(data), desc='[+] Exporting data to .csv'):
-                writer.writerow(row)
+        # Merge df_initial with new_data:
+        new_data = pd.DataFrame(data)
+        df_initial = (exists_on_cloud(BUCKET_NAME, BLOB_NAME) or pd.DataFrame()) and read_csv_from_gcs(BUCKET_NAME, BLOB_NAME)
+        df_final = df_initial._append(new_data, ignore_index=True)
 
-    return logging.info(f'{SCRIPT_NAME} - {DATA_FILENAME} updated!')
+        # Upload df_final on GCS:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(BUCKET_NAME)
+        blob = bucket.blob(BLOB_NAME)
+        byte_stream = BytesIO()
+        df_final.to_csv(byte_stream, index=False)
+        byte_stream.seek(0)
+        blob.upload_from_file(byte_stream, content_type='text/csv')
+
+    return logging.info(f'{SCRIPT_NAME} - {BLOB_NAME} updated!')
+
+
