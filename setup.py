@@ -8,6 +8,9 @@ setup(
         'bs4',
         'requests',
         'pandas',
-        'tqdm'
+        'tqdm',
+        'google_cloud_storage',
+        'iso3166',
+        'numpy'
     ]
 )
