@@ -3,7 +3,7 @@ from google.cloud import storage
 from io import BytesIO
 from time import sleep
 from tqdm import tqdm
-from past_launches_scraper.utils import read_csv_from_gcs, exists_on_cloud
+from past_launches_scraper.utils import read_csv_from_gcs, exists_on_cloud, clean_past_launches_data
 import logging
 import os
 import pandas as pd
@@ -145,6 +145,7 @@ def scrape_past_launches_data():
 
         # Merge df_initial with new_data:
         new_data = pd.DataFrame(data)
+        new_data = clean_past_launches_data(new_data)
         df_initial = (exists_on_cloud(BUCKET_NAME, BLOB_NAME) or pd.DataFrame()) and read_csv_from_gcs(BUCKET_NAME, BLOB_NAME)
         df_final = df_initial._append(new_data, ignore_index=True)
 
