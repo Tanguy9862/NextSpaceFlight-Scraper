@@ -1,2 +1,3 @@
 /venv
-/past_launches_scraper/spacexploration-keys.json
+.env
+main.py
