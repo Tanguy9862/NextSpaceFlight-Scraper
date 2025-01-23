@@ -5,7 +5,10 @@ import os
 env_path = Path.cwd() / ".env"
 load_dotenv(dotenv_path=env_path)
 ENV = os.getenv("ENV", "local")
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'spacexploration-gcp-bucket-access.json' or None
+
+
+# Only for if you want to access to your Cloud Storage from Local
+# os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = 'spacexploration-gcp-bucket-access.json' or None
 
 
 class BaseConfig:
