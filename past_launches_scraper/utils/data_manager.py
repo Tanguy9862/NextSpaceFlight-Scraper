@@ -4,8 +4,10 @@ import pandas as pd
 import logging
 from pathlib import Path
 from io import StringIO
+from google.cloud import storage
 
-from ..config import CONFIG, LocalConfig, LambdaConfig
+
+from ..config import CONFIG, LocalConfig, AWSConfig, GCPConfig
 from ..utils.generals import get_most_recent_date
 
 
@@ -38,7 +40,7 @@ def load_existing_data():
         logging.warning(f'[+] No existing data file detected at `{filepath}`. Scraping all data from scratch.')
         return False
 
-    elif isinstance(CONFIG, LambdaConfig):
+    elif isinstance(CONFIG, AWSConfig):
         logging.info(
             f'[AWS ENV] -> Attempting to load data file from Bucket: {CONFIG.BUCKET_NAME}, '
             f'Key: {CONFIG.DATA_EXPORT_FILENAME}')
@@ -58,13 +60,35 @@ def load_existing_data():
                             f'from scratch.')
             return False
 
+    # Loading data from GCP using Cloud Storage
+    elif isinstance(CONFIG, GCPConfig):
+        logging.info(f'[GCP] -> Attempting to load data file from Bucket: {CONFIG.BUCKET_NAME}, '
+                     f'Key: {CONFIG.DATA_EXPORT_FILENAME}')
+        try:
+            client = storage.Client()
+            bucket = client.get_bucket(CONFIG.BUCKET_NAME)
+            blob = bucket.blob(CONFIG.DATA_EXPORT_FILENAME)
+
+            if not blob.exists():
+                raise FileNotFoundError(f"Blob {CONFIG.DATA_EXPORT_FILENAME} does not exist in bucket {CONFIG.BUCKET_NAME}.")
+
+            # Read the file and get the last date
+            csv_content = blob.download_as_text()
+            df = pd.read_csv(StringIO(csv_content))
+            last_date = get_most_recent_date(df)
+        except Exception as e:
+            logging.warning(f'[+] Failed to load file from GCP bucket: {e}')
+        else:
+            logging.info(f'[+] Data file ({CONFIG.DATA_EXPORT_FILENAME}) successfully loaded from GCP!')
+            return df, last_date
+
     raise RuntimeError(
         f"Invalid CONFIG detected. CONFIG must be an instance of either LocalConfig or LambdaConfig. "
         f"Current CONFIG: {type(CONFIG).__name__}"
     )
 
 
-def export_data_to_s3(updated_data: pd.DataFrame):
+def export_data_to_s3(updated_data: pd.DataFrame) -> None:
     """
     Export the updated data (DataFrame) to an S3 bucket as a CSV file.
     """
@@ -87,7 +111,23 @@ def export_data_to_s3(updated_data: pd.DataFrame):
         logging.warning(f'[!] Error uploading file to S3: {e}')
 
 
-def export_data_to_local(updated_data: pd.DataFrame):
+def export_data_to_cloud_storage(updated_data: pd.DataFrame) -> None:
+    """
+    Export the updated data (DataFrame) to a Google Cloud Storage bucket as a CSV file.
+    """
+    try:
+        logging.info(f'[+] Uploading updated data file to bucket {CONFIG.BUCKET_NAME} [..]')
+
+        client = storage.Client()
+        bucket = client.get_bucket(CONFIG.BUCKET_NAME)
+        blob = bucket.blob(CONFIG.DATA_EXPORT_FILENAME)
+        blob.upload_from_string(updated_data.to_csv(index=False), content_type="text/csv")
+        logging.info(f'[+] DONE! Data successfully uploaded to {CONFIG.BUCKET_NAME}/{CONFIG.DATA_EXPORT_FILENAME}')
+    except Exception as e:
+        logging.warning(f'[!] Error uploading file to Google Cloud Storage: {e}')
+
+
+def export_data_to_local(updated_data: pd.DataFrame) -> None:
     """
     Export the updated data (DataFrame) to a local CSV file.
     """

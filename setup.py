@@ -12,6 +12,7 @@ setup(
         'iso3166',
         'numpy',
         'python-dotenv',
-        'boto3'
+        'boto3',
+        'google-cloud-storage'
     ]
 )

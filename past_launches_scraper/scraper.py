@@ -4,8 +4,13 @@ import re
 from time import sleep
 from tqdm import tqdm
 
-from .config import CONFIG, LocalConfig, LambdaConfig
-from past_launches_scraper.utils.data_manager import load_existing_data, export_data_to_local, export_data_to_s3
+from .config import CONFIG, LocalConfig, AWSConfig, GCPConfig
+from past_launches_scraper.utils.data_manager import (
+    load_existing_data,
+    export_data_to_local,
+    export_data_to_s3,
+    export_data_to_cloud_storage
+)
 from past_launches_scraper.utils.generals import make_soup, convert_to_date, clean_past_launches_data
 
 logging.basicConfig(
@@ -110,11 +115,13 @@ def scrape_past_launches_data():
 
         if isinstance(CONFIG, LocalConfig):
             export_data_to_local(df_final)
-        elif isinstance(CONFIG, LambdaConfig):
+        elif isinstance(CONFIG, AWSConfig):
             export_data_to_s3(df_final)
+        elif isinstance(CONFIG, GCPConfig):
+            export_data_to_cloud_storage(df_final)
         else:
             raise RuntimeError(
-                f"Invalid CONFIG detected. CONFIG must be an instance of either LocalConfig or LambdaConfig. "
+                f"Invalid CONFIG detected. CONFIG must be an instance of either LocalConfig, AWSConfig, or GCPConfig. "
                 f"Current CONFIG: {type(CONFIG).__name__}"
             )
 
