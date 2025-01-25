@@ -1,49 +1,57 @@
 # NextSpaceFlight-Scrapper
 
-## Overview
-
-This Python package is designed to scrape historical space launch data from NextSpaceFlight.com and store it in Google Cloud Storage. It complements the [Space-App](https://github.com/Tanguy9862/Space-App) project by providing the data backbone for various visualizations and analyses.
-
-## Features
-
-- **Source**: Scrapes comprehensive historical data from NextSpaceFlight.com.
-- **Historical Data**: Gathers detailed information on past space launches.
-- **Data Transformation**: Transforms the scraped data into a CSV format for easy consumption.
-- **Google Cloud Storage**: Automatically uploads the scraped data to Google Cloud Storage.
-- **Data Update**: Checks for existing data in Google Cloud Storage and appends new data.
-- **Error Handling**: Robust error handling to ensure data integrity.
-- **Logging**: Detailed logging for debugging and monitoring.
+**NextSpaceFlight-Scraper** is a Python module for scraping past space launch data from the [Next Spaceflight](https://nextspaceflight.com) website. It allows you to customize the environment (local, AWS, or GCP) and configure storage locations as needed.
 
 ## Installation
 
-To install this package, run:
+1. Clone the repository and install dependencies:
+   ```bash
+   git clone https://github.com/Tanguy9862/NextSpaceFlight-Scraper.git
+   pip install -r requirements.txt
+   ```
 
-```bash
-pip install git+https://github.com/Tanguy9862/NextSpaceFlight-Scrapper.git
-```
+2. Configure the environment:
+   - Create a `.env` file in the root directory to specify the environment (default: `local`):
+     ```plaintext
+     ENV=local
+     ```
+   - Supported environments:
+     - `local`: Saves data to the `data/` directory.
+     - `aws`: Uploads data to an AWS S3 bucket. Set the bucket name in `AWSConfig`.
+     - `gcp`: Uploads data to a GCP Storage bucket. Set the bucket name in `GCPConfig`.
 
+3. Modify the `config.py` file if needed:
+   - Customize the storage location or other scraper settings in the appropriate class (`LocalConfig`, `AWSConfig`, or `GCPConfig`).
+   - Example for AWS:
+     ```python
+     class AWSConfig(BaseConfig):
+         BUCKET_NAME = "your-custom-aws-bucket-name"
+     ```
+   - Example for GCP:
+     ```python
+     class GCPConfig(BaseConfig):
+         BUCKET_NAME = "your-custom-gcp-bucket-name"
+     ```
+     
 ## Usage
 
-After installation, you can import the package and use the `scrape_past_launches_data()` function to scrape and update the data.
+To use the scraper, call the `scrape_past_launches_data()` function in your script. Example:
 
 ```python
-from next_spaceflight_scrapper import scraper
+from past_launches_scraper.scraper import scrape_past_launches_data
 
-# Scrape and update historical launch data
-scraper.scrape_past_launches_data()
+# Run the scraper
+scrape_past_launches_data()
 ```
 
-## Dependencies
+Depending on the configured environment:
+- **Local environment**: Data will be saved (or updated) to the `data/nsf_past_launches.csv` file.
+- **AWS environment**: Data will be uploaded to the S3 bucket specified in `AWSConfig.BUCKET_NAME`.
+- **GCP environment**: Data will be uploaded to the Google Cloud Storage bucket specified in `GCPConfig.BUCKET_NAME`.
 
-- Python 3.x
-- BeautifulSoup
-- Requests
-- Pandas
-- Google Cloud Storage
+## Integration Example
 
-## Authentication
-
-To access Google Cloud Storage, you'll need a JSON file containing your GCS authentication keys. Place this file in the `past_launches_scrapper` directory and name it `spacexploration-keys.json`.
+This module is used in [Space-App](https://github.com/Tanguy9862/Space-App), a Dash app deployed on GCP. The scraper runs as part of a Cloud Run function triggered periodically (every 3 hours). Scraped data is stored in a GCP Storage bucket and fetched by the Dash app for visualization.
 
 ## License
 
